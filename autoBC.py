@@ -1,21 +1,17 @@
-from asyncore import write
-from curses import mouseinterval
 from subprocess import run
-from platform import platform, system
+from platform import system
 from sys import modules
 from os.path import isdir, isfile, realpath, dirname
-from os import listdir
 
 #request(plataform)  <-------------------------------------------
 plataform = system()
 dir = dirname(realpath(__file__))
-
 print('Sistema identificado: {}'.format(plataform))
 
 def requests():
     
     if 'selenium' not in modules:
-
+        
         print("Dependência não encontrada: Selenium")
         print("Instalando Selenium ...")
 
@@ -28,17 +24,6 @@ def requests():
 
         run(['python3','-m','pip','install','webdriver_manager'])
 
-    if plataform == 'Linux':
-
-        run(['dpkg','-l','|','grep','chromedriver','>>','teste.txt'])
-
-        file = open('teste.txt','r+')
-        pacotes = file.readlines()
-        file.close()
-
-        if 'chromedriver' not in list(pacotes[0]):
-            input("O drive de automação não está instalado, para continuar instale o pacote chromium-chromedriver.\nUse o comando 'sudo apt-get install chromium-chromedriver'.\n Depois continue.")
- 
 if not isfile('user.txt'):
 
     requests()
@@ -54,35 +39,20 @@ if not isfile('user.txt'):
 
 if plataform == 'Windows':
     if not isdir('C:\Program Files\Google\Chrome\Application'):
-        try:
-            run(['start', r'chromesetup\ChromeSetup.exe'])
-        except:
-            print("Instale o Chrome, há um instalador na pasta 'chromesetup', realize a instalação e me execute novamente.")
-
-if plataform == 'Linux':
-    
-    input("Instale o Chrome, há um instalador na pasta 'chromesetup', realize a instalação e me execute novamente.")
-    exit()
-
-
-#Drive de automação do navegador
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-###############################################
-
-def bot(system,username, password, renew =True, consult = False):
-
+            input("Instale o Chrome, há um instalador na pasta 'chromesetup', realize a instalação e me execute novamente.")
+            exit()
+            
+def bot(username, password, renew =True, consult = False):
+    #Drive de automação do navegador
+    from selenium import webdriver
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.common.keys import Keys
+    from webdriver_manager.chrome import ChromeDriverManager
+    ###############################################
     options = webdriver.ChromeOptions()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
-
-    if system == 'Windows':
-        browser = webdriver.Chrome (executable_path = r"chromedrive\chromedriver.exe", options= options)
-    if system == 'Linux':
-        from webdriver_manager.chrome import ChromeDriverManager
-        browser = webdriver.Chrome (ChromeDriverManager().install(), options= options)
-
+    
+    browser = webdriver.Chrome (ChromeDriverManager().install(), options= options)
     browser.get("http://virtua.uel.br:8080/auth/login?")
     browser.find_element(By.NAME,"username").send_keys(username)
     browser.find_element(By.NAME,"password").send_keys(password + Keys.RETURN)
@@ -92,14 +62,19 @@ def bot(system,username, password, renew =True, consult = False):
         browser.find_element(By.ID,"button.renew").click()
         
     if consult:
-        pass
-    
+        datas_de_vencimento = []
+        quantidade_de_livros = browser.find_element(By.XPATH, "/html/body/div/div[2]/div[5]/div[4]/div[1]/form[1]/table/thead/tr[1]/td/div/div[1]/span").text
+        
+        if quantidade_de_livros[-2] == ' ':
+            quantidade_de_livros = int(quantidade_de_livros[-1])
+        else:
+            quantidade_de_livros = int(quantidade_de_livros[-2] + quantidade_de_livros[-1])
+        for i in range(quantidade_de_livros):
+            datas_de_vencimento.append(browser.find_element(By.XPATH,"/html/body/div/div[2]/div[5]/div[4]/div[1]/form[1]/table/tbody/tr[{}]/td[4]/div".format(i+1)).text)
     browser.quit()
-
+    return datas_de_vencimento
 
 def user_file():
-    dir = dirname(realpath(__file__))
-
     if isfile('user.txt'):
 
         file = open ('user.txt','r')
@@ -108,9 +83,62 @@ def user_file():
         user = user[:-1]
 
         password = file.readline()
-        password = password[:-1]
+        password = password
         file.close()
 
-        bot (plataform,user, password, renew=False, consult=True)
+        bot (user, password, renew=False, consult=True)
 
-user_file()
+def find_Due_date(datas):
+    anos = [int(data[6:]) for data in datas]
+    meses =  [int(data[3:5]) for data in datas]
+    dias = [int(data[:2]) for data in datas]
+    print(anos, meses,dias)
+    if len(set(anos)) == 1:
+        if len(set(meses)) == 1:
+            if len(set(dias)) == 1:
+                data_de_vencimento = datas[0]
+            else:
+                data_de_vencimento = [datas[i] for i in range(len(datas)) if datas[i] == min(datas)][0]
+        else:
+            indices_mes = [i for i in range(len(meses)) if meses[i]== min(meses)]
+            dias_mes_min = [dias[i] for i in indices_mes]
+            data_de_vencimento = [datas[i] for i in range(len(datas)) if dias[i]==min(dias_mes_min)][0]
+    else:
+        anos = [anos[i] for i in range(len(datas)) if anos[i]==min(anos)]
+        indices_anos = [i for i in range(len(datas)) if anos[i] == min(anos)]
+        
+        meses = [meses[i] for i in indices_anos]
+        indices_mes = [i for i in range(len(meses)) if meses[i]==min(meses)]
+        dias_mes_min = [dias[i] for i in indices_mes]
+        data_de_vencimento = [datas[i] for i in range(len(datas)) if dias[i]==min(dias_mes_min)]
+        
+    return data_de_vencimento
+
+def autoexe(data_de_vencimento):
+    from datetime import date
+    if date.today().strftime("%d/%m/%Y") == data_de_vencimento:
+        data_de_vencimento == find_Due_date(user_file())
+        with open('renew.txt','w') as file:
+            file.write(data_de_vencimento)
+            file.close()
+    else:
+        print("A proxima execucao sera no dia {}".format(data_de_vencimento))
+
+if isfile(dir+'\\renew.txt'):
+    
+    with open('renew.txt','r') as file:
+        data_de_vencimento = file.readline()
+    file.close()
+    
+    autoexe(data_de_vencimento)
+
+
+        
+if not isfile("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\\autoBC.py") and plataform == 'Windows':
+    Inicializar = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
+    from shutil import copyfile
+    copyfile(dir +'\\autoBC.py',Inicializar)
+    copyfile(dir +'\\user.txt',Inicializar)
+    copyfile(dir + '\\renew.txt',Inicializar)
+    
+input()  
