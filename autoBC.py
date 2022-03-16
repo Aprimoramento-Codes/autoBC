@@ -1,6 +1,7 @@
 from subprocess import run
 from platform import system
 from sys import modules
+from time  import sleep
 from os.path import isdir, isfile, realpath, dirname
 
 #request(plataform)  <-------------------------------------------
@@ -9,23 +10,18 @@ dir = dirname(realpath(__file__))
 print('Sistema identificado: {}'.format(plataform))
 
 def requests():
-    
     if 'selenium' not in modules:
-        
         print("Dependência não encontrada: Selenium")
         print("Instalando Selenium ...")
-
         run(['python3','-m','pip','install','selenium'])
-
+        
     if 'webdriver_manager' not in modules:
-
         print("Dependência não encontrada: Webdriver Manager")
         print("Instalando Webdriver Manager ...")
-
+        
         run(['python3','-m','pip','install','webdriver_manager'])
 
 if not isfile('user.txt'):
-
     requests()
     print("Não há usuário registrado.\nPreencha com atencao...\n\n")
 
@@ -45,15 +41,15 @@ if plataform == 'Windows':
 def bot(username, password, renew =True, consult = False):
     #Drive de automação do navegador
     from selenium import webdriver
+    from selenium.webdriver.chrome.service import Service
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.keys import Keys
     from webdriver_manager.chrome import ChromeDriverManager
     ###############################################
-    options = webdriver.ChromeOptions()
-    options.add_experimental_option("excludeSwitches", ["enable-logging"])
     
-    browser = webdriver.Chrome (ChromeDriverManager().install(), options= options)
+    browser = webdriver.Chrome (service=Service(ChromeDriverManager().install()))
     browser.get("http://virtua.uel.br:8080/auth/login?")
+    
     browser.find_element(By.NAME,"username").send_keys(username)
     browser.find_element(By.NAME,"password").send_keys(password + Keys.RETURN)
     
@@ -86,13 +82,13 @@ def user_file():
         password = password
         file.close()
 
-        bot (user, password, renew=False, consult=True)
+    return bot (user, password, renew=True, consult=True)
 
 def find_Due_date(datas):
     anos = [int(data[6:]) for data in datas]
     meses =  [int(data[3:5]) for data in datas]
     dias = [int(data[:2]) for data in datas]
-    print(anos, meses,dias)
+
     if len(set(anos)) == 1:
         if len(set(meses)) == 1:
             if len(set(dias)) == 1:
@@ -111,6 +107,10 @@ def find_Due_date(datas):
         indices_mes = [i for i in range(len(meses)) if meses[i]==min(meses)]
         dias_mes_min = [dias[i] for i in indices_mes]
         data_de_vencimento = [datas[i] for i in range(len(datas)) if dias[i]==min(dias_mes_min)]
+        
+    with open('renew.txt','w') as file:
+            file.write(data_de_vencimento)
+            file.close()
         
     return data_de_vencimento
 
@@ -131,14 +131,14 @@ if isfile(dir+'\\renew.txt'):
     file.close()
     
     autoexe(data_de_vencimento)
-
-
-        
+else:
+    autoexe(find_Due_date(user_file()))
+           
+'''
 if not isfile("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\\autoBC.py") and plataform == 'Windows':
     Inicializar = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
     from shutil import copyfile
     copyfile(dir +'\\autoBC.py',Inicializar)
     copyfile(dir +'\\user.txt',Inicializar)
     copyfile(dir + '\\renew.txt',Inicializar)
-    
-input()  
+''' 
