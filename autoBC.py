@@ -11,6 +11,10 @@ print('Sistema identificado: {}'.format(plataform))
 
 def requests():
     if 'selenium' not in modules:
+<<<<<<< HEAD
+=======
+        
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
         print("Dependência não encontrada: Selenium")
         print("Instalando Selenium ...")
         run(['python3','-m','pip','install','selenium'])
@@ -41,13 +45,23 @@ if plataform == 'Windows':
 def bot(username, password, renew =True, consult = False):
     #Drive de automação do navegador
     from selenium import webdriver
+<<<<<<< HEAD
     from selenium.webdriver.chrome.service import Service
+=======
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
     from selenium.webdriver.common.by import By
     from selenium.webdriver.common.keys import Keys
     from webdriver_manager.chrome import ChromeDriverManager
     ###############################################
+<<<<<<< HEAD
     
     browser = webdriver.Chrome (service=Service(ChromeDriverManager().install()))
+=======
+    options = webdriver.ChromeOptions()
+    options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    
+    browser = webdriver.Chrome (ChromeDriverManager().install(), options= options)
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
     browser.get("http://virtua.uel.br:8080/auth/login?")
     
     browser.find_element(By.NAME,"username").send_keys(username)
@@ -82,13 +96,21 @@ def user_file():
         password = password
         file.close()
 
+<<<<<<< HEAD
     return bot (user, password, renew=True, consult=True)
+=======
+        bot (user, password, renew=False, consult=True)
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
 
 def find_Due_date(datas):
     anos = [int(data[6:]) for data in datas]
     meses =  [int(data[3:5]) for data in datas]
     dias = [int(data[:2]) for data in datas]
+<<<<<<< HEAD
 
+=======
+    print(anos, meses,dias)
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
     if len(set(anos)) == 1:
         if len(set(meses)) == 1:
             if len(set(dias)) == 1:
@@ -108,10 +130,13 @@ def find_Due_date(datas):
         dias_mes_min = [dias[i] for i in indices_mes]
         data_de_vencimento = [datas[i] for i in range(len(datas)) if dias[i]==min(dias_mes_min)]
         
+<<<<<<< HEAD
     with open('renew.txt','w') as file:
             file.write(data_de_vencimento)
             file.close()
         
+=======
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
     return data_de_vencimento
 
 def autoexe(data_de_vencimento):
@@ -131,14 +156,25 @@ if isfile(dir+'\\renew.txt'):
     file.close()
     
     autoexe(data_de_vencimento)
+<<<<<<< HEAD
 else:
     autoexe(find_Due_date(user_file()))
            
 '''
+=======
+
+
+        
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
 if not isfile("C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup\\autoBC.py") and plataform == 'Windows':
     Inicializar = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
     from shutil import copyfile
     copyfile(dir +'\\autoBC.py',Inicializar)
     copyfile(dir +'\\user.txt',Inicializar)
     copyfile(dir + '\\renew.txt',Inicializar)
+<<<<<<< HEAD
 ''' 
+=======
+    
+input()  
+>>>>>>> 2ad84be52ba669447bdd0d881fe9ea3be0e38268
