@@ -1,0 +1,1 @@
+python "C:\Users\arthu\Desktop\autoBC\autoBC.py" --user
